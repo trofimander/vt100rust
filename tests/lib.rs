@@ -16,3 +16,11 @@ fn test_beep() {
     s.push(ascii::BEL);
     assert_eq!(do_test(s.chars()), [Term::Chars("This is a beep".to_string()), Term::Beep]);
 }
+
+#[test]
+fn test_insert_blank_characters() {
+    let mut s = String::new();
+    s.push(ascii::ESC);
+    s.push_str("[3;@");
+    assert_eq!(do_test(s.chars()), [Term::InsertBlankCharacters(3)]);
+}

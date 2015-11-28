@@ -2,5 +2,6 @@
 pub enum Term {
     Beep,
     Backspace,
-    Chars(String)
+    Chars(String),
+    InsertBlankCharacters(u32)
 }
