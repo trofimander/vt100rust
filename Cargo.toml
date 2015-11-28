@@ -1,0 +1,7 @@
+[package]
+name = "vt100"
+version = "0.1.0"
+authors = ["Dmitry Trofimov <trofimov.dmitry@gmail.com>"]
+
+[dependencies]
+itertools = "*"
