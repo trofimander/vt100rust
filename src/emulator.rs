@@ -7,11 +7,11 @@ use std::str::Chars;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use terminal::Term;
+use terminal::Code;
 use ascii;
 
 pub struct VtEmulator<'a> {
-    term_actions: Rc<RefCell<VecDeque<Term>>>,
+    term_actions: Rc<RefCell<VecDeque<Code>>>,
     stream: Rc<RefCell<Chars<'a>>>,
     state: Box<State>
 }
@@ -25,20 +25,20 @@ impl<'a> VtEmulator<'a> {
         }
     }
 
-    pub fn emit(&self, term:Term) {
+    pub fn emit(&self, term:Code) {
         self.term_actions.borrow_mut().push_back(term);
     }
 
-    pub fn get(&self)->Option<Term> {
+    pub fn get(&self)->Option<Code> {
         self.term_actions.borrow_mut().pop_front().clone()
     }
 
 }
 
 impl<'a> Iterator for VtEmulator<'a> {
-    type Item = Term;
+    type Item = Code;
 
-    fn next(&mut self) -> Option<Term> {
+    fn next(&mut self) -> Option<Code> {
         loop {
             match self.get() {
                 Some(x) => {
@@ -70,8 +70,8 @@ impl State for State0 {
         match ch {
                 Some(x)=>
                     match x {
-                        ascii::BEL => emu.emit(Term::Beep),
-                        ascii::BS  => emu.emit(Term::Backspace),
+                        ascii::BEL => emu.emit(Code::Bell),
+                        ascii::BS  => emu.emit(Code::Backspace),
                         ascii::ESC => return Some(Box::new(EscapeSeq)),
                         _ => {
                             let chars: String =
@@ -79,7 +79,7 @@ impl State for State0 {
                                 take_while_ref(|x:&char| *x > 20u8 as char).collect();
                             let mut s = x.to_string();
                             s.push_str(&chars);
-                            emu.emit(Term::Chars(s));
+                            emu.emit(Code::Chars(s));
                         }
                     },
                     None => return None
@@ -152,7 +152,7 @@ impl State for ControlSequence {
         };
 
         match final_char {
-            '@' => emu.emit(Term::InsertBlankCharacters(arg(0, 1))),
+            '@' => emu.emit(Code::InsertBlankCharacters(arg(0, 1))),
             _ => {} //TODO: handle
         };
 

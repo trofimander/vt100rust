@@ -1,26 +1,30 @@
 extern crate vt100;
 
-use vt100::terminal::Term;
+use vt100::terminal::Code;
 use vt100::emulator::VtEmulator;
 use vt100::ascii;
 
 use std::str::Chars;
 
-fn do_test(stream: Chars)->Vec<Term> {
+fn do_test(stream: Chars)->Vec<Code> {
     VtEmulator::new(stream).collect()
+}
+
+fn do_test_esc(seq: &str)->Vec<Code> {
+    let mut s = String::new();
+    s.push(ascii::ESC);
+    s.push_str(seq);
+    do_test(s.chars())
 }
 
 #[test]
 fn test_beep() {
-    let mut s = "This is a beep".to_string();
+    let mut s = "Hello world!".to_string();
     s.push(ascii::BEL);
-    assert_eq!(do_test(s.chars()), [Term::Chars("This is a beep".to_string()), Term::Beep]);
+    assert_eq!(do_test(s.chars()), [Code::Chars("Hello world!".to_string()), Code::Bell]);
 }
 
 #[test]
 fn test_insert_blank_characters() {
-    let mut s = String::new();
-    s.push(ascii::ESC);
-    s.push_str("[3;@");
-    assert_eq!(do_test(s.chars()), [Term::InsertBlankCharacters(3)]);
+    assert_eq!(do_test_esc("[3;@"), [Code::InsertBlankCharacters(3)]);
 }
