@@ -1,71 +1,15 @@
 extern crate itertools;
 
+use parser::*;
+use ascii;
 use self::itertools::Itertools;
 
-use std::collections::VecDeque;
-use std::str::Chars;
-use std::cell::RefCell;
-use std::rc::Rc;
-
-use terminal::Code;
-use ascii;
-
-pub struct VtEmulator<'a> {
-    term_actions: Rc<RefCell<VecDeque<Code>>>,
-    stream: Rc<RefCell<Chars<'a>>>,
-    state: Box<State>
-}
-
-impl<'a> VtEmulator<'a> {
-    pub fn new(stream: Chars<'a>) -> VtEmulator<'a> {
-        VtEmulator {
-            term_actions: Rc::new(RefCell::new(VecDeque::new())),
-            stream: Rc::new(RefCell::new(stream)),
-            state: Box::new(State0)
-        }
-    }
-
-    pub fn emit(&self, term:Code) {
-        self.term_actions.borrow_mut().push_back(term);
-    }
-
-    pub fn get(&self)->Option<Code> {
-        self.term_actions.borrow_mut().pop_front().clone()
-    }
-
-}
-
-impl<'a> Iterator for VtEmulator<'a> {
-    type Item = Code;
-
-    fn next(&mut self) -> Option<Code> {
-        loop {
-            match self.get() {
-                Some(x) => {
-                    return Some(x)
-                },
-                None => match self.state.next(self) {
-                    Some(x) => self.state = x,
-                    None => break
-                }
-            }
-
-        }
-
-        None
-    }
-}
-
-trait State {
-    fn next(&self, emu: &VtEmulator) -> Option<Box<State>>;
-}
-
-struct State0;
-struct EscapeSeq;
-struct ControlSequence;
+pub struct State0;
+pub struct EscapeSeq;
+pub struct ControlSequence;
 
 impl State for State0 {
-    fn next(&self, emu: &VtEmulator) -> Option<Box<State>> {
+    fn next(&self, emu: &VtParser) -> Option<Box<State>> {
         let ch:Option<char> = emu.stream.borrow_mut().next();
         match ch {
                 Some(x)=>
@@ -90,7 +34,7 @@ impl State for State0 {
 }
 
 impl State for EscapeSeq {
-    fn next(&self, emu: &VtEmulator) -> Option<Box<State>> {
+    fn next(&self, emu: &VtParser) -> Option<Box<State>> {
         let ch:Option<char> = emu.stream.borrow_mut().next();
         match ch {
                 Some(x)=>
@@ -108,7 +52,7 @@ impl State for EscapeSeq {
 
 
 impl State for ControlSequence {
-    fn next(&self, emu: &VtEmulator) -> Option<Box<State>> {
+    fn next(&self, emu: &VtParser) -> Option<Box<State>> {
         let mut pos = -1;
         let mut starts_with_question_mark = false;
         let mut starts_with_more_mark = false;

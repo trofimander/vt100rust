@@ -1,13 +1,12 @@
 extern crate vt100;
 
-use vt100::terminal::Code;
-use vt100::emulator::VtEmulator;
+use vt100::parser::*;
 use vt100::ascii;
 
 use std::str::Chars;
 
 fn do_test(stream: Chars)->Vec<Code> {
-    VtEmulator::new(stream).collect()
+    VtParser::new(stream).collect()
 }
 
 fn do_test_esc(seq: &str)->Vec<Code> {
