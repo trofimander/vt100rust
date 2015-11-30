@@ -20,12 +20,20 @@ impl<'a> VtParser<'a> {
         VtParser {
             term_actions: Rc::new(RefCell::new(VecDeque::new())),
             stream: Rc::new(RefCell::new(stream)),
-            state: Box::new(State0)
+            state: Box::new(Ground)
         }
     }
 
     pub fn emit(&self, term:Code) {
         self.term_actions.borrow_mut().push_back(term);
+    }
+
+    pub fn error(&self, chars: &[char]) {
+        self.emit(Code::Error) //TODO
+    }
+
+    pub fn error_msg(&self, msg: String) {
+       self.emit(Code::Error) //TODO
     }
 
     pub fn get(&self)->Option<Code> {

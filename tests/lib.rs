@@ -17,7 +17,7 @@ fn do_test_esc(seq: &str)->Vec<Code> {
 }
 
 #[test]
-fn test_beep() {
+fn test_bell() {
     let mut s = "Hello world!".to_string();
     s.push(ascii::BEL);
     assert_eq!(do_test(s.chars()), [Code::Chars("Hello world!".to_string()), Code::Bell]);
@@ -25,5 +25,10 @@ fn test_beep() {
 
 #[test]
 fn test_insert_blank_characters() {
-    assert_eq!(do_test_esc("[3;@"), [Code::InsertBlankCharacters(3)]);
+    assert_eq!(do_test_esc("[31;@"), [Code::InsertBlankCharacters(31)]);
+}
+
+#[test]
+fn test_system_commands() {
+    assert_eq!(do_test(format!("{}]2;Rust{}", ascii::ESC, ascii::ST).chars()), [Code::WindowTitle("Rust".to_string())]);
 }

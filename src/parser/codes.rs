@@ -68,8 +68,10 @@ pub enum Code {
     CharacterAttributes, //SGR
     RestoreDecPrivateMode, //
     DeviceStatusReport, //DECSTBM
-    WindowManipulation{mode:u32, width:u32, height:u32}
+    WindowManipulation{mode:u32, width:u32, height:u32},
 
+    WindowTitle(String),
+    CurrentPath(String),
 
-
+    Error
 }
