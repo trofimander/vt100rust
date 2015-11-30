@@ -84,7 +84,6 @@ impl State for ControlSequence {
 
         let mut argv: Vec<u32> = Vec::new();
         let mut cur: u32 = 0;
-        let mut digit: u8 = 0;
 
         loop {
             let ch:Option<char> = emu.stream.borrow_mut().next();
@@ -98,7 +97,7 @@ impl State for ControlSequence {
                         '>' => if pos == 0 {
                                    more_mark = true;
                                },
-                        ';' => if (cur>0) {
+                        ';' => if cur>0 {
                                     argv.push(cur);
                                     cur = 0;
                                 },
@@ -149,9 +148,9 @@ impl State for ControlSequence {
             'm' => {}, //TODO
             'n' => emu.emit(if question_mark {Code::DecDeviceStatusReport} else {Code::DeviceStatusReport(arg(0, 1))}),
             'r' => emu.emit(if question_mark {Code::RestoreDecPrivateMode} else {Code::SetScrollingRegion{top:arg(0, 1), bottom:arg(1, 0)}}),
-            't' => match arg(0, -1) {
+            't' => match arg(0, 0) {
                         8 => emu.emit(Code::Resize{width: arg(1, 0), height:arg(2, 0)}),
-                        _ => emu.error_msg(format!("Unkown window manipulation command {}", arg(0, -1)).to_string())
+                        e@_ => emu.error_msg(format!("Unkown window manipulation command {}", e.to_string()))
                     },
             _ => emu.error_msg(format!("Unknown CSI code {}", final_char))
         };
