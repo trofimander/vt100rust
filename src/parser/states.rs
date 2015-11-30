@@ -3,7 +3,6 @@ extern crate itertools;
 use parser::*;
 use ascii;
 use self::itertools::Itertools;
-use std::str;
 
 pub struct Ground;
 pub struct EscapeSeq;
@@ -79,8 +78,8 @@ impl State for EscapeSeq {
 impl State for ControlSequence {
     fn next(&self, emu: &VtParser) -> Option<Box<State>> {
         let mut pos = -1;
-        let mut starts_with_question_mark = false;
-        let mut starts_with_more_mark = false;
+        let mut question_mark = false;
+        let mut more_mark = false;
         let mut final_char: char = 0 as char;
 
         let mut argv: Vec<u32> = Vec::new();
@@ -94,10 +93,10 @@ impl State for ControlSequence {
                     pos+=1;
                     match x {
                         '?' => if pos == 0 {
-                                    starts_with_question_mark = true;
+                                    question_mark = true;
                                },
                         '>' => if pos == 0 {
-                                   starts_with_more_mark = true;
+                                   more_mark = true;
                                },
                         ';' => if (cur>0) {
                                     argv.push(cur);
@@ -120,9 +119,41 @@ impl State for ControlSequence {
             if i<argv.len() {argv[i]} else {default}
         };
 
+        let arg1 = |i: usize, default: u32| -> u32 {
+            if i<argv.len() && argv[i] != 0 {argv[i]} else {default}
+        };
+
         match final_char {
             '@' => emu.emit(Code::InsertBlankCharacters(arg(0, 1))),
-            _ => {} //TODO: handle
+            'A' => emu.emit(Code::CursorUp(arg1(0, 1))),
+            'B' => emu.emit(Code::CursorDown(arg1(0, 1))),
+            'C' => emu.emit(Code::CursorForward(arg1(0, 1))),
+            'D' => emu.emit(Code::CursorBackward(arg1(0, 1))),
+            'E' => emu.emit(Code::CursorNextLine(arg1(0, 1))),
+            'F' => emu.emit(Code::CursorPrecedingLine(arg1(0, 1))),
+            'G' | '`' => emu.emit(Code::CursorHorizontalAbsolute(arg(0, 1))),
+            'f' | 'H' => emu.emit(Code::CursorPosition{x:arg(0, 1), y:arg(1, 1)}),
+            'J' => emu.emit(if question_mark {Code::SelectiveEraseInDisplay(arg(0, 1))} else {Code::EraseInDisplay(arg(0, 1))}),
+            'K' => emu.emit(if question_mark {Code::SelectiveEraseInLine(arg(0, 1))} else {Code::EraseInLine(arg(0, 1))}),
+            'L' => emu.emit(Code::InsertLines(arg(0, 1))),
+            'M' => emu.emit(Code::DeleteLines(arg(0, 1))),
+            'X' => emu.emit(Code::EraseCharacters(arg(0, 1))),
+            'P' => emu.emit(Code::DeleteCharacters(arg(0, 1))),
+            'S' => emu.emit(Code::ScrollUp(arg(0, 1))),
+            'T' => emu.emit(Code::ScrollDown(arg(0, 1))),
+            'c' => emu.emit(if more_mark && arg(0, 1) == 0 {Code::SendSecondaryDeviceAttributes} else {Code::SendPrimaryDeviceAttributes}),
+            'd' => emu.emit(Code::LinePositionAbsolute(arg(0, 1))),
+            'g' => emu.emit(Code::TabClear(arg(0, 1))),
+            'h' => emu.emit(Code::SetMode(arg(0, 1))), //TODO
+            'l' => emu.emit(Code::SetMode(arg(0, 1))), //TODO
+            'm' => {}, //TODO
+            'n' => emu.emit(if question_mark {Code::DecDeviceStatusReport} else {Code::DeviceStatusReport(arg(0, 1))}),
+            'r' => emu.emit(if question_mark {Code::RestoreDecPrivateMode} else {Code::SetScrollingRegion{top:arg(0, 1), bottom:arg(1, 0)}}),
+            't' => match arg(0, -1) {
+                        8 => emu.emit(Code::Resize{width: arg(1, 0), height:arg(2, 0)}),
+                        _ => emu.error_msg(format!("Unkown window manipulation command {}", arg(0, -1)).to_string())
+                    },
+            _ => emu.error_msg(format!("Unknown CSI code {}", final_char))
         };
 
         Some(Box::new(Ground))

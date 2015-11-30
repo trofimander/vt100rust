@@ -29,11 +29,11 @@ impl<'a> VtParser<'a> {
     }
 
     pub fn error(&self, chars: &[char]) {
-        self.emit(Code::Error) //TODO
+        self.emit(Code::Error(format!("Unhandled sequnce: {}", chars.iter().cloned().collect::<String>())));
     }
 
     pub fn error_msg(&self, msg: String) {
-       self.emit(Code::Error) //TODO
+       self.emit(Code::Error(msg))
     }
 
     pub fn get(&self)->Option<Code> {

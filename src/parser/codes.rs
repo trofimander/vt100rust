@@ -58,7 +58,8 @@ pub enum Code {
     DeleteCharacters(u32), //DCH
     ScrollUp(u32), //SU
     ScrollDown(u32), //SD
-    SendDeviceAttributes, //DA
+    SendPrimaryDeviceAttributes, //Primary DA
+    SendSecondaryDeviceAttributes, //Secondary DA
     LinePositionAbsolute(u32), //VPA
     TabClear(u32), //TBC
     SetMode(u32), //SM
@@ -67,11 +68,13 @@ pub enum Code {
     ResetDECPrivateMode(u32), //DECRST
     CharacterAttributes, //SGR
     RestoreDecPrivateMode, //
-    DeviceStatusReport, //DECSTBM
-    WindowManipulation{mode:u32, width:u32, height:u32},
+    DeviceStatusReport(u32), //DECSTBM
+    DecDeviceStatusReport,
+    SetScrollingRegion{top:u32, bottom:u32},
+    Resize{width:u32, height:u32},
 
     WindowTitle(String),
     CurrentPath(String),
 
-    Error
+    Error(String)
 }
