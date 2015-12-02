@@ -1,3 +1,6 @@
+use parser::style::Style;
+use parser::style::Color;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Code {
     Bell, //Bell (Ctrl-G)
@@ -5,8 +8,6 @@ pub enum Code {
     CarriageReturn, //Carriage return (Ctrl-M)
     ReturnTerminalStatus, //Return terminal status (Ctrl-E). Default response is an empty string
     NewLine, //Form Feed (FF), New Page (NP), Line Feed (FF), New Line (NL) or Vertical Tab (Ctrl-K). All are treated the same.
-    ShiftIn, //Shift In (Ctrl-O) -> Switch to Standard Character Set. This invokes the G0 character set (the default)
-    ShiftOut, //Shift Out (Ctrl-N) -> Switch to Alternate Character Set. This invokes the G1 character set (the default)
     HorizontalTab, // Horizontal Tab (HT) (Ctrl-I)
     Chars(String), // Plain characters
 
@@ -75,6 +76,13 @@ pub enum Code {
 
     WindowTitle(String),
     CurrentPath(String),
+
+    //Style
+    DefaultStyle,
+    StyleOption(Style, bool),
+    Foreground(Color),
+    Background(Color),
+
 
     Error(String)
 }

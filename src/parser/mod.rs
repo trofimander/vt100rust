@@ -1,5 +1,6 @@
 mod states;
 pub mod codes;
+pub mod style;
 
 use std::collections::VecDeque;
 use std::str::Chars;

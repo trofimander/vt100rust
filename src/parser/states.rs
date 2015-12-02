@@ -3,6 +3,7 @@ extern crate itertools;
 use parser::*;
 use ascii;
 use self::itertools::Itertools;
+use parser::style::*;
 
 pub struct Ground;
 pub struct EscapeSeq;
@@ -18,6 +19,12 @@ impl State for Ground {
                     match x {
                         ascii::BEL => emu.emit(Code::Bell),
                         ascii::BS  => emu.emit(Code::Backspace),
+                        ascii::CR  => emu.emit(Code::CarriageReturn),
+                        ascii::ENQ => emu.emit(Code::ReturnTerminalStatus),
+                        ascii::FF | ascii::LF | ascii::VT  => emu.emit(Code::NewLine),
+                        ascii::SI => emu.emit(Code::MapCharsetToGL(0)),
+                        ascii::SO => emu.emit(Code::MapCharsetToGL(1)),
+                        ascii::HT => emu.emit(Code::HorizontalTab),
                         ascii::ESC => return Some(Box::new(EscapeSeq)),
                         _ => {
                             let chars: String =
@@ -84,6 +91,7 @@ impl State for ControlSequence {
 
         let mut argv: Vec<u32> = Vec::new();
         let mut cur: u32 = 0;
+        let mut digit = false;
 
         loop {
             let ch:Option<char> = emu.stream.borrow_mut().next();
@@ -97,12 +105,14 @@ impl State for ControlSequence {
                         '>' => if pos == 0 {
                                    more_mark = true;
                                },
-                        ';' => if cur>0 {
+                        ';' => if digit {
                                     argv.push(cur);
                                     cur = 0;
+                                    digit = false;
                                 },
                         '0'...'9' => {
                             cur = 10*cur + (x as u32) - ('0' as u32);
+                            digit = true;
                         },
                         '\x40'...'\x7E' => {
                             final_char = x;
@@ -145,7 +155,7 @@ impl State for ControlSequence {
             'g' => emu.emit(Code::TabClear(arg(0, 1))),
             'h' => emu.emit(Code::SetMode(arg(0, 1))), //TODO
             'l' => emu.emit(Code::SetMode(arg(0, 1))), //TODO
-            'm' => {}, //TODO
+            'm' => emit_style_codes(emu, &argv),
             'n' => emu.emit(if question_mark {Code::DecDeviceStatusReport} else {Code::DeviceStatusReport(arg(0, 1))}),
             'r' => emu.emit(if question_mark {Code::RestoreDecPrivateMode} else {Code::SetScrollingRegion{top:arg(0, 1), bottom:arg(1, 0)}}),
             't' => match arg(0, 0) {

@@ -2,6 +2,7 @@ extern crate vt100;
 
 use vt100::parser::*;
 use vt100::ascii;
+use vt100::parser::style::*;
 
 use std::str::Chars;
 
@@ -31,4 +32,17 @@ fn test_insert_blank_characters() {
 #[test]
 fn test_system_commands() {
     assert_eq!(do_test(format!("{}]2;Rust{}", ascii::ESC, ascii::ST).chars()), [Code::WindowTitle("Rust".to_string())]);
+}
+
+#[test]
+fn test_style() {
+    assert_eq!(do_test_esc("[4;22;38;2;0;0;0;47;m"),
+        [
+            Code::StyleOption(Style::Underlined, true),
+            Code::StyleOption(Style::Bold, false),
+            Code::StyleOption(Style::Dim, false),
+            Code::Foreground(Color::Rgb { r: 0, g: 0, b: 0 }),
+            Code::Background(Color::Indexed(7))
+        ]
+    );
 }
