@@ -78,7 +78,7 @@ pub fn emit_style_codes(emu: &VtParser, argv:&Vec<u32>) {
             39 => emu.emit(Code::Foreground(Color::Default)),
             //Background
             i@40...47 => emu.emit(Code::Background(Color::Indexed(i-40))),
-            48 => {
+            48 => { // Set xterm-256 background color
                 let (color, s) = color256(argv, i);
                 step = s as usize;
                 match color {
@@ -87,6 +87,11 @@ pub fn emit_style_codes(emu: &VtParser, argv:&Vec<u32>) {
                 };
             },
             49 => emu.emit(Code::Background(Color::Default)),
+
+            //Bright versions of the ISO colors for foreground
+            i@90...97 => emu.emit(Code::Foreground(Color::Indexed(i - 82))),
+            //Bright versions of the ISO colors for background
+            i@100...107 => emu.emit(Code::Foreground(Color::Indexed(i - 92))),
 
             //TODO: handle iso colors
             _ => {}
